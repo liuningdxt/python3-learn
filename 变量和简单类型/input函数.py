@@ -1,0 +1,5 @@
+name = input("请输入名称：")
+print(name)
+age = input("Age:")
+age = int(age)
+print(age,type(age))
