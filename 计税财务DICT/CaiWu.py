@@ -15,7 +15,7 @@ pd.set_option('display.max_columns', None)
 class TableWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("DataFrame Viewer")
+        self.setWindowTitle("效益分析表财务金额核对")
         self.setGeometry(100, 100, 1800, 1200)
 
         # 创建一个 QTableWidget 控件，填充效益表计算数据
@@ -41,7 +41,7 @@ class TableWindow(QMainWindow):
         self.button.setFixedSize(200, 50)
 
         # 创建 QLabel 控件显示文件名称
-        self.file_label = QLabel('No file selected', self)
+        self.file_label = QLabel('未选中文件', self)
         self.file_label.setAlignment(Qt.AlignCenter)
         # 设置标签的固定大小（宽度：300，高度：50）
         self.file_label.setFixedSize(600, 50)
