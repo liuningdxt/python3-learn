@@ -10,6 +10,11 @@ from PyQt5.QtGui import QColor, QBrush, QFont
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
 
+filedFilePath = '要素能力解析字典列表.xls'
+filedDf = pd.read_excel(filedFilePath, sheet_name='sheet1')
+filedDf.dropna(axis=1, how='all', inplace=True)
+print(filedDf)
+
 
 # PyQt5 主窗口
 class TableWindow(QMainWindow):
