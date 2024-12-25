@@ -5,7 +5,7 @@ import pandas as pd
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, \
     QPushButton, QFileDialog, QMessageBox, QLabel, QHBoxLayout
-from PyQt5.QtGui import QColor, QBrush, QFont
+from PyQt5.QtGui import QColor, QBrush, QFont, QDragEnterEvent, QDropEvent
 
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
@@ -35,21 +35,13 @@ class TableWindow(QMainWindow):
         # 加粗表格线条和字体
         self.apply_bold_styles(self.table1)
 
-        # 创建按钮，点击按钮加载 Excel 文件
-        self.button = QPushButton('导入效益表', self)
-        self.button.clicked.connect(self.load_excel)
-        self.button.setFixedSize(200, 50)
-
-        # 创建 QLabel 控件显示文件名称
-        self.file_label = QLabel('未选中文件', self)
-        self.file_label.setAlignment(Qt.AlignCenter)
-        # 设置标签的固定大小（宽度：300，高度：50）
-        self.file_label.setFixedSize(600, 50)
+        # 标签用于显示拖放提示
+        self.label = QLabel("拖动效益表文件到此窗口", self)
+        self.label.setAlignment(Qt.AlignCenter)
 
         # 创建水平布局，将按钮和标签并排显示
         h_layout = QHBoxLayout()
-        h_layout.addWidget(self.button)  # 添加按钮
-        h_layout.addWidget(self.file_label)  # 添加标签
+        h_layout.addWidget(self.label)  # 添加拖放提示标签
 
         # 创建一个垂直布局（以便进一步添加其他控件）
         v_layout = QVBoxLayout()
@@ -66,6 +58,35 @@ class TableWindow(QMainWindow):
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.table1.setEditTriggers(QTableWidget.NoEditTriggers)
         self.table1.setFocusPolicy(Qt.NoFocus)
+
+        # 启用拖放功能
+        self.setAcceptDrops(True)
+
+        # 事件：拖动进入窗口时
+
+    def dragEnterEvent(self, event: QDragEnterEvent):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+
+    # 事件：文件被放下时
+    def dropEvent(self, event: QDropEvent):
+        file_url = event.mimeData().urls()[0].toLocalFile()
+        if file_url.endswith(".xlsx") | file_url.endswith(".xls"):
+            self.parse_excel(file_url)
+        else:
+            self.label.setText("只支持 excel 文件格式")
+
+    # 解析 CSV 文件并显示在表格中
+    def parse_excel(self, file_path):
+        try:
+            if file_path:
+                # 使用 pandas 读取 Excel 文件并加载为 DataFrame
+                # 显示 DataFrame 的内容在 QTableWidget 中
+                self.display_df_in_table(file_path)
+
+            self.label.setText(f"成功加载文件: {file_path}")
+        except Exception as e:
+            self.label.setText(f"文件加载失败: {str(e)}")
 
     def fill_table(self, table_widget):
         for row in range(table_widget.rowCount()):
