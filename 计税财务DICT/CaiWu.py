@@ -17,7 +17,7 @@ class TableWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("效益分析表财务金额核对")
-        self.setGeometry(100, 100, 1800, 1200)
+        self.setGeometry(100, 100, 2000, 1200)
 
         # 创建一个 QTableWidget 控件，填充效益表计算数据
         self.table = QTableWidget(self)
@@ -82,8 +82,7 @@ class TableWindow(QMainWindow):
         # 启用拖放功能
         self.setAcceptDrops(True)
 
-        # 事件：拖动进入窗口时
-
+    # 事件：拖动进入窗口时
     def dragEnterEvent(self, event: QDragEnterEvent):
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
@@ -328,6 +327,28 @@ class TableWindow(QMainWindow):
         # 比较 金额 列，并根据比较结果改变颜色
         self.compare_and_mark_colors()
 
+        # 设置表格样式
+        self.table.setStyleSheet("""
+                    QTableWidget {
+                        border: 2px solid black;  /* 设置表格外边框 */
+                    }
+                    QTableWidget::item {
+                        border: 1px solid black;  /* 设置每个单元格的内边框 */
+                        padding: 5px;
+                    }
+                    QHeaderView::section {
+                        padding: 4px;
+                        border: 1px solid gray;  /* 设置表头边框 */
+                    }
+                    QTableWidget::item:selected {
+                        background-color: #87CEFA;  /* 设置选中项的背景色为浅蓝色 */
+                    }
+                """)
+
+        self.add_column()
+        # 自动调整行高
+        self.table.resizeRowsToContents()
+
         table_widget = self.table1
         df_project = pd.read_excel(filePath, sheet_name='综合评估表', usecols='B:J', header=3)
         value = df_project.iloc[0, 1]
@@ -391,11 +412,13 @@ class TableWindow(QMainWindow):
         # 获取数据表格的行数
         row_count = self.table.rowCount()
 
+        font = QFont()
+        font.setBold(True)
+
         # 遍历所有行并进行比较
         for row_idx in range(row_count):
             amount_item = self.table.item(row_idx, 4)
             compare_item = self.table.item(row_idx, 9)
-
             # 确保项不为空
             if amount_item and compare_item:
                 amount = float(amount_item.text())
@@ -404,12 +427,80 @@ class TableWindow(QMainWindow):
                 # 比较并标记颜色
             if amount == compare_amount:
                 # 如果相同，设置绿色背景
-                amount_item.setBackground(QBrush(QColor(144, 238, 144)))  # Green
-                compare_item.setBackground(QBrush(QColor(144, 238, 144)))  # Green
+                # amount_item.setBackground(QBrush(QColor(144, 238, 144)))  # Green
+                amount_item.setForeground(QBrush(QColor(0, 0, 0)))  # 设置文本红色
+                # compare_item.setBackground(QBrush(QColor(144, 238, 144)))  # Green
+                compare_item.setForeground(QBrush(QColor(0, 0, 0)))  # 设置文本红色
             else:
                 # 如果不同，设置红色背景
-                amount_item.setBackground(QBrush(QColor(255, 182, 193)))  # Red
-                compare_item.setBackground(QBrush(QColor(255, 182, 193)))  # Red
+                # amount_item.setBackground(QBrush(QColor(255, 182, 193)))  # Red
+                amount_item.setForeground(QBrush(QColor(255, 0, 0)))  # 设置文本红色
+                # compare_item.setBackground(QBrush(QColor(255, 182, 193)))  # Red
+                compare_item.setForeground(QBrush(QColor(255, 0, 0)))  # Red
+
+            amount_item.setFont(font)
+            compare_item.setFont(font)
+
+    def add_column(self):
+        # 增加一列到最前面
+        self.table.insertColumn(0)  # 将新列插入到索引0（最前面）
+        self.table.setHorizontalHeaderItem(0, QTableWidgetItem("二级分类"))
+
+        # 填充新列的数据
+        for row in range(self.table.rowCount()):
+            self.table.setItem(row, 0, QTableWidgetItem(f"New{row + 1}"))
+
+        # 合并新列的单元格（假设要将新列的所有单元格合并为一个单元格）
+        self.table.setItem(0, 0, QTableWidgetItem("\n".join(f"IT现金流入")))
+        self.table.item(0, 0).setTextAlignment(Qt.AlignCenter)  # 设置文本居中
+        self.table.setSpan(0, 0, 26, 1)  # 合并最前面一列的所有行
+
+        self.table.setItem(26, 0, QTableWidgetItem("\n".join(f"CT现金流入")))
+        self.table.item(26, 0).setTextAlignment(Qt.AlignCenter)  # 设置文本居中
+        self.table.setSpan(26, 0, 13, 1)  # 合并最前面一列的所有行
+
+        self.table.setItem(39, 0, QTableWidgetItem("\n".join(f"往来款现金流入")))
+        self.table.item(39, 0).setTextAlignment(Qt.AlignCenter)  # 设置文本居中
+        self.table.setSpan(39, 0, 8, 1)  # 合并最前面一列的所有行
+
+        self.table.setItem(47, 0, QTableWidgetItem("\n".join(f"平台类流出")))
+        self.table.item(47, 0).setTextAlignment(Qt.AlignCenter)  # 设置文本居中
+        self.table.setSpan(47, 0, 6, 1)  # 合并最前面一列的所有行
+
+        self.table.setItem(53, 0, QTableWidgetItem("\n".join(f"传输网络配套流出")))
+        self.table.item(53, 0).setTextAlignment(Qt.AlignCenter)  # 设置文本居中
+        self.table.setSpan(53, 0, 1, 1)  # 合并最前面一列的所有行
+
+        self.table.setItem(54, 0, QTableWidgetItem("\n".join(f"IT现金流出")))
+        self.table.item(54, 0).setTextAlignment(Qt.AlignCenter)  # 设置文本居中
+        self.table.setSpan(54, 0, 11, 1)  # 合并最前面一列的所有行
+
+        self.table.setItem(65, 0, QTableWidgetItem("\n".join(f"间接现金流出")))
+        self.table.item(65, 0).setTextAlignment(Qt.AlignCenter)  # 设置文本居中
+        self.table.setSpan(65, 0, 4, 1)  # 合并最前面一列的所有行
+
+        self.table.setItem(69, 0, QTableWidgetItem("\n".join(f"往来款现金流出")))
+        self.table.item(69, 0).setTextAlignment(Qt.AlignCenter)  # 设置文本居中
+        self.table.setSpan(69, 0, 9, 1)  # 合并最前面一列的所有行
+
+        self.table.insertColumn(0)  # 将新列插入到索引0（最前面）
+        self.table.setHorizontalHeaderItem(0, QTableWidgetItem("一级分类"))
+
+        self.table.setItem(0, 0, QTableWidgetItem("\n".join(f"现金流入")))
+        self.table.item(0, 0).setTextAlignment(Qt.AlignCenter)  # 设置文本居中
+        self.table.setSpan(0, 0, 47, 1)  # 合并最前面一列的所有行
+
+        self.table.setItem(47, 0, QTableWidgetItem('投资现金流出' + '\n' + '（Capex）'))
+        self.table.item(47, 0).setTextAlignment(Qt.AlignCenter)  # 设置文本居中
+        self.table.setSpan(47, 0, 7, 1)  # 合并最前面一列的所有行
+
+        self.table.setItem(54, 0, QTableWidgetItem('成本现金流出' + '\n' + '（Opex）'))
+        self.table.item(54, 0).setTextAlignment(Qt.AlignCenter)  # 设置文本居中
+        self.table.setSpan(54, 0, 15, 1)  # 合并最前面一列的所有行
+
+        self.table.setItem(69, 0, QTableWidgetItem("\n".join(f"往来款现金流出")))
+        self.table.item(69, 0).setTextAlignment(Qt.AlignCenter)  # 设置文本居中
+        self.table.setSpan(69, 0, 9, 1)  # 合并最前面一列的所有行
 
 
 # 运行应用程序
