@@ -179,11 +179,14 @@ class TableWindow(QMainWindow):
         df = pd.read_excel(filePath, sheet_name='现金流明细表（集客填报）', usecols='E:G', header=7)
         df.dropna(inplace=True)
         df.reset_index(drop=True, inplace=True)
-        df.drop([0], inplace=True)
+        df.rename(columns={'Unnamed: 4': '类别', 'Unnamed: 5': '税率', 'Unnamed: 6': '含税金额'}, inplace=True)
+
+        # 删除无效行
+        index_to_drop = df[df['类别'] == '1、 集成-信息服务'].index
+        df.drop(index_to_drop, inplace=True)
         df.reset_index(drop=True, inplace=True)
         print("1-开始读取文件-集客")
         print("1-1开始读取文件-集客-计算不含税金额")
-        df.rename(columns={'Unnamed: 4': '类别', 'Unnamed: 5': '税率', 'Unnamed: 6': '含税金额'}, inplace=True)
         df['不含税金额-计算'] = (df['含税金额'] / (1 + df['税率']))
         df['不含税金额-计算'] = df['不含税金额-计算'].astype(float)
         df['不含税金额-计算'] = df['不含税金额-计算'].round(2)
@@ -196,7 +199,11 @@ class TableWindow(QMainWindow):
                      inplace=True)
         df_cw.dropna(inplace=True)
         df_cw.reset_index(drop=True, inplace=True)
-        df_cw.drop([0, 68, 69], inplace=True)
+
+        # 删除无效行
+        index_to_drop = df_cw[((df_cw['类别'] == '1、 集成收入-信息服务') | (df_cw['类别'] == '10、垫资成本') | (df_cw[
+                                                                                                                   '类别'] == '10-1 垫资金额'))].index
+        df_cw.drop(index_to_drop, inplace=True)
         df_cw.reset_index(drop=True, inplace=True)
         print("2-结束读取文件-财务")
         df['索引'] = df.index
