@@ -1,11 +1,12 @@
 import datetime
+import math
 from builtins import print
 import sys
 import pandas as pd
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, \
     QPushButton, QFileDialog, QMessageBox, QLabel, QHBoxLayout
-from PyQt5.QtGui import QColor, QBrush, QFont, QDragEnterEvent, QDropEvent
+from PyQt5.QtGui import QColor, QBrush, QFont, QDragEnterEvent, QDropEvent, QIcon
 
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
@@ -35,13 +36,32 @@ class TableWindow(QMainWindow):
         # 加粗表格线条和字体
         self.apply_bold_styles(self.table1)
 
+        # 创建按钮，点击按钮加载 Excel 文件
+        self.button = QPushButton('导入效益表', self)
+        self.button.clicked.connect(self.load_excel)
+        self.button.setFixedSize(200, 50)
+
+        # 创建 QLabel 控件显示文件名称
+        self.file_label = QLabel('未选中文件', self)
+        self.file_label.setAlignment(Qt.AlignCenter)
+        # 设置标签的固定大小（宽度：300，高度：50）
+        self.file_label.setFixedSize(600, 50)
+
         # 标签用于显示拖放提示
-        self.label = QLabel("拖动效益表文件到此窗口", self)
+        self.label = QLabel("方法1：拖动效益表Excel文件到此窗口" + "\n"
+                                                                  "方法2：点击导入------>效益表按钮，选择文件导入", self)
         self.label.setAlignment(Qt.AlignCenter)
+        font = QFont()
+        font.setBold(True)
+        font.setPointSize(10)
+        self.label.setFont(font)
 
         # 创建水平布局，将按钮和标签并排显示
         h_layout = QHBoxLayout()
         h_layout.addWidget(self.label)  # 添加拖放提示标签
+        h_layout.addStretch(1)
+        h_layout.addWidget(self.button)  # 添加按钮
+        h_layout.addWidget(self.file_label)  # 添加标签
 
         # 创建一个垂直布局（以便进一步添加其他控件）
         v_layout = QVBoxLayout()
@@ -200,7 +220,27 @@ class TableWindow(QMainWindow):
         df = pd.read_excel(filePath, sheet_name='现金流明细表（集客填报）', usecols='E:G', header=7)
         df.dropna(inplace=True)
         df.reset_index(drop=True, inplace=True)
-        df.rename(columns={'Unnamed: 4': '类别', 'Unnamed: 5': '税率', 'Unnamed: 6': '含税金额'}, inplace=True)
+        df.rename(columns={'Unnamed: 4': '类别', 'Unnamed: 5': '税率_集客', 'Unnamed: 6': '含税金额'}, inplace=True)
+
+        df_count = pd.read_excel(filePath, sheet_name='现金流明细表（集客填报）', usecols='E:DO', header=7)
+        df_count.dropna(how='all', inplace=True)
+        # 删除科目，税率是空的数据。剔除税率，汇总金额列
+        df_count.dropna(subset=['Unnamed: 5'], inplace=True)
+        df_count.drop(columns=['Unnamed: 5', 'Unnamed: 6'], inplace=True)
+        df_count.dropna(subset=['Unnamed: 4'], inplace=True)
+        df_count.rename(columns={'Unnamed: 4': '类别'}, inplace=True)
+        # 设置为索引
+        df_count.set_index('类别', inplace=True)
+        df_count.fillna(0, inplace=True)
+        # 统计每个科目在每个月金额大于0的次数
+        df_count_cal = (df_count > 0).sum(axis=1)
+        # 输出金额大于0的次数
+        df_count_cal = df_count_cal.reset_index()
+        df_count_cal.columns = ['类别', '集客-月份数']
+        index_to_drop = df_count_cal[df_count_cal['类别'] == '1、 集成-信息服务'].index
+        df_count_cal.drop(index_to_drop, inplace=True)
+        df_count_cal = df_count_cal.reset_index(drop=True)
+        df_count_cal['索引'] = df_count_cal.index
 
         # 删除无效行
         index_to_drop = df[df['类别'] == '1、 集成-信息服务'].index
@@ -208,7 +248,7 @@ class TableWindow(QMainWindow):
         df.reset_index(drop=True, inplace=True)
         print("1-开始读取文件-集客")
         print("1-1开始读取文件-集客-计算不含税金额")
-        df['不含税金额-计算'] = (df['含税金额'] / (1 + df['税率']))
+        df['不含税金额-计算'] = (df['含税金额'] / (1 + df['税率_集客']))
         df['不含税金额-计算'] = df['不含税金额-计算'].astype(float)
         df['不含税金额-计算'] = df['不含税金额-计算'].round(2)
         print("1-1结束读取文件-集客-计算不含税金额")
@@ -216,20 +256,52 @@ class TableWindow(QMainWindow):
 
         print("2-开始读取文件-财务")
         df_cw = pd.read_excel(filePath, sheet_name='财务列账明细表（财务填报）', usecols='E:G', header=7)
-        df_cw.rename(columns={'Unnamed: 4': '类别', 'Unnamed: 5': '税率', 'Unnamed: 6': '不含税金额_财务'},
+        df_cw.rename(columns={'Unnamed: 4': '类别_财务', 'Unnamed: 5': '税率_财务', 'Unnamed: 6': '不含税金额_财务'},
                      inplace=True)
         df_cw.dropna(inplace=True)
         df_cw.reset_index(drop=True, inplace=True)
 
+        df_cw_count = pd.read_excel(filePath, sheet_name='财务列账明细表（财务填报）', usecols='E:DO', header=7)
+        df_cw_count.dropna(how='all', inplace=True)
+        # 删除科目，税率是空的数据。剔除税率，汇总金额列
+        df_cw_count.dropna(subset=['Unnamed: 5'], inplace=True)
+        df_cw_count.drop(columns=['Unnamed: 5', 'Unnamed: 6'], inplace=True)
+        df_cw_count.dropna(subset=['Unnamed: 4'], inplace=True)
+        df_cw_count.rename(columns={'Unnamed: 4': '类别'}, inplace=True)
+        # 设置为索引
+        df_cw_count.set_index('类别', inplace=True)
+        df_cw_count.fillna(0, inplace=True)
+        df_cw_count['Unnamed: 7'] = df_cw_count['Unnamed: 7'].astype(float)
+        print(df_cw_count)
+        # 统计每个科目在每个月金额大于0的次数
+        df_cw_count_cal = (df_cw_count > 0).sum(axis=1)
+        # 输出金额大于0的次数
+        df_cw_count_cal = df_cw_count_cal.reset_index()
+        df_cw_count_cal.columns = ['类别', '财务-月份数']
+        index_to_drop = df_cw_count_cal[
+            ((df_cw_count_cal['类别'] == '1、 集成收入-信息服务') | (df_cw_count_cal['类别'] == '10、垫资成本') | (
+                    df_cw_count_cal[
+                        '类别'] == '10-1 垫资金额'))].index
+        df_cw_count_cal.drop(index_to_drop, inplace=True)
+        df_cw_count_cal = df_cw_count_cal.reset_index(drop=True)
+        df_cw_count_cal['索引'] = df_cw_count_cal.index
+
         # 删除无效行
-        index_to_drop = df_cw[((df_cw['类别'] == '1、 集成收入-信息服务') | (df_cw['类别'] == '10、垫资成本') | (df_cw[
-                                                                                                                   '类别'] == '10-1 垫资金额'))].index
+        index_to_drop = df_cw[
+            ((df_cw['类别_财务'] == '1、 集成收入-信息服务') | (df_cw['类别_财务'] == '10、垫资成本') | (df_cw[
+                                                                                                           '类别_财务'] == '10-1 垫资金额'))].index
         df_cw.drop(index_to_drop, inplace=True)
         df_cw.reset_index(drop=True, inplace=True)
         print("2-结束读取文件-财务")
         df['索引'] = df.index
         df_cw['索引'] = df_cw.index
-        merged_df = pd.merge(df, df_cw, on='索引', how='inner')
+        df_a = pd.merge(df, df_count_cal, on='索引', how='left', suffixes=('_集客', '_集客1'))
+        df_a = df_a[['类别_集客', '集客-月份数', '税率_集客', '含税金额', '不含税金额-计算', '索引']]
+
+        df_b = pd.merge(df_cw, df_cw_count_cal, on='索引', how='left', suffixes=('_财务', '_财务1'))
+        df_b = df_b[['类别_财务', '财务-月份数', '税率_财务', '不含税金额_财务', '索引']]
+
+        merged_df = pd.merge(df_a, df_b, on='索引', how='inner')
         # 比较两个列是否相同
         columns_are_equal = df['不含税金额-计算'].equals(df_cw['不含税金额_财务'])
         print(columns_are_equal)
@@ -259,6 +331,8 @@ class TableWindow(QMainWindow):
         table_widget = self.table1
         df_project = pd.read_excel(filePath, sheet_name='综合评估表', usecols='B:J', header=3)
         value = df_project.iloc[0, 1]
+        if value is None:
+            value = '空'
         table_widget.setItem(0, 1, QTableWidgetItem(value))
         table_widget.item(0, 1).setTextAlignment(Qt.AlignCenter)  # 设置文本居中
 
@@ -267,6 +341,8 @@ class TableWindow(QMainWindow):
         table_widget.item(1, 1).setTextAlignment(Qt.AlignCenter)  # 设置文本居中
 
         value = df_project.iloc[2, 1]
+        if type(value) == float and math.isnan(value):
+            value = '空'
         table_widget.setItem(2, 1, QTableWidgetItem(value))
         table_widget.item(2, 1).setTextAlignment(Qt.AlignCenter)  # 设置文本居中
 
@@ -317,8 +393,8 @@ class TableWindow(QMainWindow):
 
         # 遍历所有行并进行比较
         for row_idx in range(row_count):
-            amount_item = self.table.item(row_idx, 3)
-            compare_item = self.table.item(row_idx, 7)
+            amount_item = self.table.item(row_idx, 4)
+            compare_item = self.table.item(row_idx, 9)
 
             # 确保项不为空
             if amount_item and compare_item:
@@ -328,12 +404,12 @@ class TableWindow(QMainWindow):
                 # 比较并标记颜色
             if amount == compare_amount:
                 # 如果相同，设置绿色背景
-                amount_item.setBackground(QBrush(QColor(0, 255, 0)))  # Green
-                compare_item.setBackground(QBrush(QColor(0, 255, 0)))  # Green
+                amount_item.setBackground(QBrush(QColor(144, 238, 144)))  # Green
+                compare_item.setBackground(QBrush(QColor(144, 238, 144)))  # Green
             else:
                 # 如果不同，设置红色背景
-                amount_item.setBackground(QBrush(QColor(255, 0, 0)))  # Red
-                compare_item.setBackground(QBrush(QColor(255, 0, 0)))  # Red
+                amount_item.setBackground(QBrush(QColor(255, 182, 193)))  # Red
+                compare_item.setBackground(QBrush(QColor(255, 182, 193)))  # Red
 
 
 # 运行应用程序
