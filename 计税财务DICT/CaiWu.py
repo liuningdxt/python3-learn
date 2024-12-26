@@ -1,12 +1,13 @@
 import datetime
 import math
-from builtins import print
 import sys
+from builtins import print
+
 import pandas as pd
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor, QBrush, QFont, QDragEnterEvent, QDropEvent
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, \
     QPushButton, QFileDialog, QMessageBox, QLabel, QHBoxLayout
-from PyQt5.QtGui import QColor, QBrush, QFont, QDragEnterEvent, QDropEvent, QIcon
 
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
@@ -315,7 +316,6 @@ class TableWindow(QMainWindow):
 
         # 设置表头
         self.table.setHorizontalHeaderLabels(merged_df.columns)
-
         # 填充表格数据
         for row_idx, row in merged_df.iterrows():
             for col_idx, value in enumerate(row):
@@ -324,25 +324,28 @@ class TableWindow(QMainWindow):
         # 设置列自适应宽度
         self.table.resizeColumnsToContents()
 
-        # 设置表格样式
-        self.table.setStyleSheet("""
-                            QTableWidget {
-                                border: 1px solid black;  /* 设置表格外边框 */
-                            }
-                            QHeaderView::section {
-                                border: 1px solid black;  /* 设置表头边框 */
-                            }
-                            QTableWidget::item:selected {
-                                background-color: #87CEFA;  /* 设置选中项的背景色为浅蓝色 */
-                            }
-                            """
-                        )
-
-
         # 比较 金额 列，并根据比较结果改变颜色
         self.compare_and_mark_colors()
 
         self.add_column()
+
+        # 设置表格样式
+        self.table.setStyleSheet("""
+                                    QTableWidget {
+                                        border: 1px solid black;  /* 设置表格外边框 */
+                                    }
+                                    QHeaderView::section {
+                                        border: 1px solid black;  /* 设置表头边框 */
+                                    }
+                                    QTableWidget::item:selected {
+                                        background-color: #87CEFA;  /* 设置选中项的背景色为浅蓝色 */
+                                    }
+                                    QTableWidget::item {
+                                        border: 1px solid black;
+                                    }
+                                    """
+                                 )
+
         # 自动调整行高
         self.table.resizeRowsToContents()
 
@@ -424,17 +427,16 @@ class TableWindow(QMainWindow):
                 # 比较并标记颜色
             if amount == compare_amount:
                 # 如果相同，设置绿色背景
-                amount_item.setBackground(QBrush(QColor(144, 238, 144)))  # Green
-                # amount_item.setForeground(QBrush(QColor(0, 0, 0)))  # 设置文本红色
-                compare_item.setBackground(QBrush(QColor(144, 238, 144)))  # Green
-                # compare_item.setForeground(QBrush(QColor(0, 0, 0)))  # 设置文本红色
+                # amount_item.setBackground(QBrush(QColor(144, 238, 144)))  # Green
+                amount_item.setForeground(QBrush(QColor(0, 0, 255)))  # 设置文本红色
+                # compare_item.setBackground(QBrush(QColor(144, 238, 144)))  # Green
+                compare_item.setForeground(QBrush(QColor(0, 0, 255)))  # 设置文本红色
             else:
                 # 如果不同，设置红色背景
-                amount_item.setBackground(QBrush(QColor(255, 182, 193)))  # Red
-                # amount_item.setForeground(QBrush(QColor(255, 0, 0)))  # 设置文本红色
-                compare_item.setBackground(QBrush(QColor(255, 182, 193)))  # Red
-                # compare_item.setForeground(QBrush(QColor(255, 0, 0)))  # Red
-
+                # amount_item.setBackground(QBrush(QColor(255, 182, 193)))  # Red
+                amount_item.setForeground(QBrush(QColor(255, 0, 0)))  # 设置文本红色
+                # compare_item.setBackground(QBrush(QColor(255, 182, 193)))  # Red
+                compare_item.setForeground(QBrush(QColor(255, 0, 0)))  # Red
             amount_item.setFont(font)
             compare_item.setFont(font)
 
