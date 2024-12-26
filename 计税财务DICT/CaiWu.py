@@ -340,9 +340,6 @@ class TableWindow(QMainWindow):
                                     QTableWidget::item:selected {
                                         background-color: #87CEFA;  /* 设置选中项的背景色为浅蓝色 */
                                     }
-                                    QTableWidget::item {
-                                        border: 1px solid black;
-                                    }
                                     """
                                  )
 
@@ -427,22 +424,25 @@ class TableWindow(QMainWindow):
 
                 # 比较并标记颜色
             if amount == compare_amount:
+                None
                 # 如果相同，设置绿色背景
                 # amount_item.setBackground(QBrush(QColor(144, 238, 144)))  # Green
-                amount_item.setForeground(QBrush(QColor(0, 0, 255)))  # 设置文本红色
+                # amount_item.setForeground(QBrush(QColor(0, 0, 255)))  # 设置文本红色
                 # compare_item.setBackground(QBrush(QColor(144, 238, 144)))  # Green
-                compare_item.setForeground(QBrush(QColor(0, 0, 255)))  # 设置文本红色
+                # compare_item.setForeground(QBrush(QColor(0, 0, 255)))  # 设置文本红色
             else:
                 # 如果不同，设置红色背景
-                # amount_item.setBackground(QBrush(QColor(255, 182, 193)))  # Red
+                amount_item.setBackground(QBrush(QColor(255, 182, 193)))  # Red
                 amount_item.setForeground(QBrush(QColor(255, 0, 0)))  # 设置文本红色
-                # compare_item.setBackground(QBrush(QColor(255, 182, 193)))  # Red
+                # amount_item.setBackground(QColor(255, 0, 0))
+                # compare_item.setBackground(QColor(0, 0, 255))
+                compare_item.setBackground(QBrush(QColor(255, 182, 193)))  # Red
                 compare_item.setForeground(QBrush(QColor(255, 0, 0)))  # Red
                 type_item.setForeground(QBrush(QColor(255, 0, 0)))
-
-            amount_item.setFont(font)
-            compare_item.setFont(font)
-            type_item.setFont(font)
+                type_item.setBackground(QBrush(QColor(255, 182, 193)))  # Red
+                amount_item.setFont(font)
+                compare_item.setFont(font)
+                type_item.setFont(font)
 
     def add_column(self):
         # 增加一列到最前面
