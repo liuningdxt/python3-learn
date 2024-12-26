@@ -417,6 +417,7 @@ class TableWindow(QMainWindow):
 
         # 遍历所有行并进行比较
         for row_idx in range(row_count):
+            type_item = self.table.item(row_idx, 0)
             amount_item = self.table.item(row_idx, 4)
             compare_item = self.table.item(row_idx, 9)
             # 确保项不为空
@@ -437,8 +438,11 @@ class TableWindow(QMainWindow):
                 amount_item.setForeground(QBrush(QColor(255, 0, 0)))  # 设置文本红色
                 # compare_item.setBackground(QBrush(QColor(255, 182, 193)))  # Red
                 compare_item.setForeground(QBrush(QColor(255, 0, 0)))  # Red
+                type_item.setForeground(QBrush(QColor(255, 0, 0)))
+
             amount_item.setFont(font)
             compare_item.setFont(font)
+            type_item.setFont(font)
 
     def add_column(self):
         # 增加一列到最前面
