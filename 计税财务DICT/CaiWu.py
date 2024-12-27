@@ -248,15 +248,15 @@ class TableWindow(QMainWindow):
         df.reset_index(drop=True, inplace=True)
         print("1-开始读取文件-集客")
         print("1-1开始读取文件-集客-计算不含税金额")
-        df['不含税金额-计算'] = (df['含税金额'] / (1 + df['税率_集客']))
-        df['不含税金额-计算'] = df['不含税金额-计算'].astype(float)
-        df['不含税金额-计算'] = df['不含税金额-计算'].round(2)
+        df['不含税金额-正确计算'] = (df['含税金额'] / (1 + df['税率_集客']))
+        df['不含税金额-正确计算'] = df['不含税金额-正确计算'].astype(float)
+        df['不含税金额-正确计算'] = df['不含税金额-正确计算'].round(2)
         print("1-1结束读取文件-集客-计算不含税金额")
         print("1-结束读取文件-集客")
 
         print("2-开始读取文件-财务")
         df_cw = pd.read_excel(filePath, sheet_name='财务列账明细表（财务填报）', usecols='E:G', header=7)
-        df_cw.rename(columns={'Unnamed: 4': '类别_财务', 'Unnamed: 5': '税率_财务', 'Unnamed: 6': '不含税金额_财务'},
+        df_cw.rename(columns={'Unnamed: 4': '类别_财务', 'Unnamed: 5': '税率_财务', 'Unnamed: 6': '不含税金额_财务表'},
                      inplace=True)
         df_cw.dropna(inplace=True)
         df_cw.reset_index(drop=True, inplace=True)
@@ -296,14 +296,14 @@ class TableWindow(QMainWindow):
         df['索引'] = df.index
         df_cw['索引'] = df_cw.index
         df_a = pd.merge(df, df_count_cal, on='索引', how='left', suffixes=('_集客', '_集客1'))
-        df_a = df_a[['类别_集客', '集客-月份数', '税率_集客', '含税金额', '不含税金额-计算', '索引']]
+        df_a = df_a[['类别_集客', '集客-月份数', '税率_集客', '含税金额', '不含税金额-正确计算', '索引']]
 
         df_b = pd.merge(df_cw, df_cw_count_cal, on='索引', how='left', suffixes=('_财务', '_财务1'))
-        df_b = df_b[['类别_财务', '财务-月份数', '税率_财务', '不含税金额_财务', '索引']]
+        df_b = df_b[['类别_财务', '财务-月份数', '税率_财务', '不含税金额_财务表', '索引']]
 
         merged_df = pd.merge(df_a, df_b, on='索引', how='inner')
         # 比较两个列是否相同
-        columns_are_equal = df['不含税金额-计算'].equals(df_cw['不含税金额_财务'])
+        columns_are_equal = df['不含税金额-正确计算'].equals(df_cw['不含税金额_财务表'])
         print(columns_are_equal)
 
         # 清空现有的表格内容
@@ -316,6 +316,13 @@ class TableWindow(QMainWindow):
 
         # 设置表头
         self.table.setHorizontalHeaderLabels(merged_df.columns)
+        font = QFont()
+        font.setBold(True)
+        self.table.horizontalHeaderItem(4).setFont(font)
+        self.table.horizontalHeaderItem(4).setForeground(QBrush(QColor(255, 0, 0)))
+        self.table.horizontalHeaderItem(9).setFont(font)
+        self.table.horizontalHeaderItem(9).setForeground(QBrush(QColor(255, 0, 0)))
+
         # 填充表格数据
         for row_idx, row in merged_df.iterrows():
             for col_idx, value in enumerate(row):
