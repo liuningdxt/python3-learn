@@ -43,6 +43,14 @@ class TableWindow(QMainWindow):
         int_validator = QIntValidator()
         self.input_box.setValidator(int_validator)
 
+        self.label2 = QLabel("|输入准考证号（整数）", self)
+        self.label2.setAlignment(Qt.AlignCenter)
+        self.label2.setFont(font)
+
+        # 创建文本输入框
+        self.input_box1 = QLineEdit(self)
+        self.input_box1.setValidator(int_validator)
+
         # 创建按钮
         button = QPushButton('生成准考证信息', self)
         button.clicked.connect(self.generate_admission)
@@ -53,6 +61,8 @@ class TableWindow(QMainWindow):
         h_layout.addStretch(1)
         h_layout.addWidget(self.label1)  # 添加序号标签
         h_layout.addWidget(self.input_box)
+        h_layout.addWidget(self.label2)  # 添加序号标签
+        h_layout.addWidget(self.input_box1)
         h_layout.addWidget(button)  # 添加按钮
         h_layout.addStretch(1)
 
@@ -164,6 +174,10 @@ class TableWindow(QMainWindow):
             if df_result.empty:
                 QMessageBox.warning(self, '输入错误', '未获取到相应序号的准考证个人信息！')
                 return
+            input_card = self.input_box1.text()
+            if not input_card:
+                QMessageBox.warning(self, '输入错误', '准考证号输入不能为空！')
+                return
 
             # 获取当前文件的路径
             if getattr(sys, 'frozen', False):
@@ -182,18 +196,17 @@ class TableWindow(QMainWindow):
             result = df_result.iloc[0]
             name = result['姓名']
             sex = result['性别']
-            id = result['序号']
             post = result['应聘岗位']
             card = result['身份证号']
             w_address = result['笔试地点']
             i_address = result['面试地点']
-            output_path = f'{name}.docx'  # 输出文件
+            output_path = f'{input_card}{name}.docx'  # 输出文件
             replacements = {
                 '[姓名]': name,
                 '[性别]': sex,
                 '[面试地点]': i_address,
                 '[笔试地点]': w_address,
-                '[准考证]': id,
+                '[准考证]': input_card,
                 '[岗位]': post,
                 '[身份证]': card
             }
