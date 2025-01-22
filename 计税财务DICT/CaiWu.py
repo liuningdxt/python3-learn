@@ -218,13 +218,14 @@ class TableWindow(QMainWindow):
 
     def display_df_in_table(self, filePath):
         df = pd.read_excel(filePath, sheet_name='现金流明细表（集客填报）', usecols='E:G', header=7)
+        df.loc[df['Unnamed: 4'] == '9、招投标服务费、标书制作费等', 'Unnamed: 5'] = 1
         df.dropna(inplace=True)
         df.reset_index(drop=True, inplace=True)
         df.rename(columns={'Unnamed: 4': '类别', 'Unnamed: 5': '税率_集客', 'Unnamed: 6': '含税金额'}, inplace=True)
-
         df_count = pd.read_excel(filePath, sheet_name='现金流明细表（集客填报）', usecols='E:DO', header=7)
         df_count.dropna(how='all', inplace=True)
         # 删除科目，税率是空的数据。剔除税率，汇总金额列
+        df_count.loc[df_count['Unnamed: 4'] == '9、招投标服务费、标书制作费等', 'Unnamed: 5'] = 1
         df_count.dropna(subset=['Unnamed: 5'], inplace=True)
         df_count.drop(columns=['Unnamed: 5', 'Unnamed: 6'], inplace=True)
         df_count.dropna(subset=['Unnamed: 4'], inplace=True)
@@ -256,6 +257,7 @@ class TableWindow(QMainWindow):
 
         print("2-开始读取文件-财务")
         df_cw = pd.read_excel(filePath, sheet_name='财务列账明细表（财务填报）', usecols='E:G', header=7)
+        df_cw.loc[df_cw['Unnamed: 4'] == '9、招投标服务费、标书制作费等', 'Unnamed: 5'] = 1
         df_cw.rename(columns={'Unnamed: 4': '类别_财务', 'Unnamed: 5': '税率_财务', 'Unnamed: 6': '不含税金额_财务表'},
                      inplace=True)
         df_cw.dropna(inplace=True)
@@ -263,6 +265,7 @@ class TableWindow(QMainWindow):
 
         df_cw_count = pd.read_excel(filePath, sheet_name='财务列账明细表（财务填报）', usecols='E:DO', header=7)
         df_cw_count.dropna(how='all', inplace=True)
+        df_cw_count.loc[df_cw_count['Unnamed: 4'] == '9、招投标服务费、标书制作费等', 'Unnamed: 5'] = 1
         # 删除科目，税率是空的数据。剔除税率，汇总金额列
         df_cw_count.dropna(subset=['Unnamed: 5'], inplace=True)
         df_cw_count.drop(columns=['Unnamed: 5', 'Unnamed: 6'], inplace=True)
@@ -272,7 +275,6 @@ class TableWindow(QMainWindow):
         df_cw_count.set_index('类别', inplace=True)
         df_cw_count.fillna(0, inplace=True)
         df_cw_count['Unnamed: 7'] = df_cw_count['Unnamed: 7'].astype(float)
-        print(df_cw_count)
         # 统计每个科目在每个月金额大于0的次数
         df_cw_count_cal = (df_cw_count > 0).sum(axis=1)
         # 输出金额大于0的次数
@@ -304,7 +306,6 @@ class TableWindow(QMainWindow):
         merged_df = pd.merge(df_a, df_b, on='索引', how='inner')
         # 比较两个列是否相同
         columns_are_equal = df['不含税金额-正确计算'].equals(df_cw['不含税金额_财务表'])
-        print(columns_are_equal)
 
         # 清空现有的表格内容
         self.table.setRowCount(0)
