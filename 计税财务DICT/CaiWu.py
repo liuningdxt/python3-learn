@@ -218,14 +218,14 @@ class TableWindow(QMainWindow):
 
     def display_df_in_table(self, filePath):
         df = pd.read_excel(filePath, sheet_name='现金流明细表（集客填报）', usecols='E:G', header=7)
-        df.loc[df['Unnamed: 4'] == '9、招投标服务费、标书制作费等', 'Unnamed: 5'] = 1
+        df.loc[df['Unnamed: 4'] == '9、招投标服务费、标书制作费等', 'Unnamed: 5'] = 0
         df.dropna(inplace=True)
         df.reset_index(drop=True, inplace=True)
         df.rename(columns={'Unnamed: 4': '类别', 'Unnamed: 5': '税率_集客', 'Unnamed: 6': '含税金额'}, inplace=True)
         df_count = pd.read_excel(filePath, sheet_name='现金流明细表（集客填报）', usecols='E:DO', header=7)
         df_count.dropna(how='all', inplace=True)
         # 删除科目，税率是空的数据。剔除税率，汇总金额列
-        df_count.loc[df_count['Unnamed: 4'] == '9、招投标服务费、标书制作费等', 'Unnamed: 5'] = 1
+        df_count.loc[df_count['Unnamed: 4'] == '9、招投标服务费、标书制作费等', 'Unnamed: 5'] = 0
         df_count.dropna(subset=['Unnamed: 5'], inplace=True)
         df_count.drop(columns=['Unnamed: 5', 'Unnamed: 6'], inplace=True)
         df_count.dropna(subset=['Unnamed: 4'], inplace=True)
@@ -257,7 +257,7 @@ class TableWindow(QMainWindow):
 
         print("2-开始读取文件-财务")
         df_cw = pd.read_excel(filePath, sheet_name='财务列账明细表（财务填报）', usecols='E:G', header=7)
-        df_cw.loc[df_cw['Unnamed: 4'] == '9、招投标服务费、标书制作费等', 'Unnamed: 5'] = 1
+        df_cw.loc[df_cw['Unnamed: 4'] == '9、招投标服务费、标书制作费等', 'Unnamed: 5'] = 0
         df_cw.rename(columns={'Unnamed: 4': '类别_财务', 'Unnamed: 5': '税率_财务', 'Unnamed: 6': '不含税金额_财务表'},
                      inplace=True)
         df_cw.dropna(inplace=True)
@@ -265,7 +265,7 @@ class TableWindow(QMainWindow):
 
         df_cw_count = pd.read_excel(filePath, sheet_name='财务列账明细表（财务填报）', usecols='E:DO', header=7)
         df_cw_count.dropna(how='all', inplace=True)
-        df_cw_count.loc[df_cw_count['Unnamed: 4'] == '9、招投标服务费、标书制作费等', 'Unnamed: 5'] = 1
+        df_cw_count.loc[df_cw_count['Unnamed: 4'] == '9、招投标服务费、标书制作费等', 'Unnamed: 5'] = 0
         # 删除科目，税率是空的数据。剔除税率，汇总金额列
         df_cw_count.dropna(subset=['Unnamed: 5'], inplace=True)
         df_cw_count.drop(columns=['Unnamed: 5', 'Unnamed: 6'], inplace=True)
